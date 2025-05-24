@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Offline To-Do List</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+      margin: 40px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      background-color: #2e2e2e;
+      color: #ffffff;
+      border: 1px solid #555;
+      padding: 10px;
+      margin-bottom: 10px;
+      resize: vertical;
+    }
+    button {
+      background-color: seagreen;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin-right: 10px;
+      cursor: pointer;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 10px;
+      background-color: #333;
+      border-bottom: 1px solid #444;
+      cursor: pointer;
+      border-radius: 4px;
+      margin-bottom: 5px;
+      transition: 0.2s;
+    }
+    li.completed {
+      text-decoration: line-through;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <h1>📝 Offline To-Do List</h1>
+  <textarea id="taskInput" placeholder="Paste your tasks here. Start each task with '-' (dash)"></textarea>
+  <button onclick="addTasks()">Add Tasks</button>
+  <button onclick="clearTasks()">Clear All</button>
+  <ul id="taskList"></ul>
+
+  <script>
+    let tasks = [];
+
+    function saveTasks() {
+      localStorage.setItem('todoTasks', JSON.stringify(tasks));
+    }
+
+    function loadTasks() {
+      const saved = localStorage.getItem('todoTasks');
+      if (saved) tasks = JSON.parse(saved);
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('taskList');
+      list.innerHTML = '';
+      tasks.forEach((task, index) => {
+        const li = document.createElement('li');
+        li.textContent = task.text;
+        if (task.done) li.classList.add('completed');
+        li.onclick = () => {
+          tasks[index].done = !tasks[index].done;
+          saveTasks();
+          renderTasks();
+        };
+        list.appendChild(li);
+      });
+    }
+
+    function addTasks() {
+      const input = document.getElementById('taskInput').value;
+      const lines = input.split('\n');
+      let currentTask = '';
+
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+
+        if (trimmed.startsWith('-')) {
+          if (currentTask) {
+            tasks.push({ text: currentTask.trim(), done: false });
+          }
+          currentTask = trimmed.slice(1).trim(); // remove dash
+        } else {
+          currentTask += ' ' + trimmed;
+        }
+      });
+
+      if (currentTask) {
+        tasks.push({ text: currentTask.trim(), done: false });
+      }
+
+      saveTasks();
+      renderTasks();
+      document.getElementById('taskInput').value = '';
+    }
+
+    function clearTasks() {
+      if (confirm("Are you sure you want to clear all tasks?")) {
+        tasks = [];
+        saveTasks();
+        renderTasks();
+      }
+    }
+
+    // Initialize
+    loadTasks();
+    renderTasks();
+  </script>
+</body>
+</html>
